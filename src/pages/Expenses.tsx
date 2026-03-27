@@ -43,9 +43,49 @@ export default function Expenses() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold">Expenses</h1>
-        <p className="text-muted-foreground text-sm mt-1">Track business expenses</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl font-bold">Expenses</h1>
+          <p className="text-muted-foreground text-sm mt-1">Track business expenses</p>
+        </div>
+        {expenses && expenses.length > 0 && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-border text-muted-foreground hover:text-primary"
+              onClick={() => {
+                const headers = ["Date", "Name", "Amount"];
+                const rows = expenses.map((e) => [
+                  format(new Date(e.expense_date), "yyyy-MM-dd"),
+                  e.name,
+                  e.amount.toFixed(2),
+                ]);
+                exportToCSV("expenses_report", headers, rows);
+              }}
+            >
+              <Download className="w-4 h-4" /> CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-border text-muted-foreground hover:text-primary"
+              onClick={() => {
+                const headers = ["Date", "Name", "Amount"];
+                const rows = expenses.map((e) => [
+                  format(new Date(e.expense_date), "yyyy-MM-dd"),
+                  e.name,
+                  `$${e.amount.toFixed(2)}`,
+                ]);
+                exportToPDF("Expenses Report", "expenses_report", headers, rows, [
+                  `Total Expenses: $${total.toFixed(2)}`,
+                ]);
+              }}
+            >
+              <Download className="w-4 h-4" /> PDF
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-xl p-5">
