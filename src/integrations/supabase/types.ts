@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          expense_date: string
+          id: string
+          name: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expense_date?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expense_date?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: Database["public"]["Enums"]["product_category"]
+          created_at: string
+          id: string
+          name: string
+          purchase_price: number
+          selling_price: number
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          id?: string
+          name: string
+          purchase_price: number
+          selling_price: number
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          id?: string
+          name?: string
+          purchase_price?: number
+          selling_price?: number
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          purchase_price: number
+          quantity_sold: number
+          sale_date: string
+          selling_price: number
+          total_profit: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          purchase_price: number
+          quantity_sold: number
+          sale_date?: string
+          selling_price: number
+          total_profit: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          purchase_price?: number
+          quantity_sold?: number
+          sale_date?: string
+          selling_price?: number
+          total_profit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +120,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      product_category:
+        | "ice_cream"
+        | "perfume"
+        | "shoes"
+        | "electronics"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +252,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      product_category: [
+        "ice_cream",
+        "perfume",
+        "shoes",
+        "electronics",
+        "other",
+      ],
+    },
   },
 } as const
