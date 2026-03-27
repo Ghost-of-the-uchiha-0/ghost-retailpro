@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Download } from "lucide-react";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 export default function Sales() {
   const qc = useQueryClient();
@@ -69,9 +71,58 @@ export default function Sales() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold">Sales</h1>
-        <p className="text-muted-foreground text-sm mt-1">Record and view sales</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl font-bold">Sales</h1>
+          <p className="text-muted-foreground text-sm mt-1">Record and view sales</p>
+        </div>
+        {sales && sales.length > 0 && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-border text-muted-foreground hover:text-primary"
+              onClick={() => {
+                const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
+                const rows = sales.map((s) => [
+                  format(new Date(s.sale_date), "yyyy-MM-dd"),
+                  (s.products as any)?.name ?? "—",
+                  s.quantity_sold.toString(),
+                  s.selling_price.toFixed(2),
+                  (s.selling_price * s.quantity_sold).toFixed(2),
+                  s.total_profit.toFixed(2),
+                ]);
+                exportToCSV("sales_report", headers, rows);
+              }}
+            >
+              <Download className="w-4 h-4" /> CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-border text-muted-foreground hover:text-primary"
+              onClick={() => {
+                const totalRev = sales.reduce((s, r) => s + r.selling_price * r.quantity_sold, 0);
+                const totalProf = sales.reduce((s, r) => s + r.total_profit, 0);
+                const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
+                const rows = sales.map((s) => [
+                  format(new Date(s.sale_date), "yyyy-MM-dd"),
+                  (s.products as any)?.name ?? "—",
+                  s.quantity_sold.toString(),
+                  `$${s.selling_price.toFixed(2)}`,
+                  `$${(s.selling_price * s.quantity_sold).toFixed(2)}`,
+                  `$${s.total_profit.toFixed(2)}`,
+                ]);
+                exportToPDF("Sales Report", "sales_report", headers, rows, [
+                  `Total Revenue: $${totalRev.toFixed(2)}`,
+                  `Total Profit: $${totalProf.toFixed(2)}`,
+                ]);
+              }}
+            >
+              <Download className="w-4 h-4" /> PDF
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Sale Form */}
