@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Download } from "lucide-react";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 export default function Expenses() {
   const qc = useQueryClient();
