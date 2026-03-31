@@ -193,6 +193,12 @@ export default function Products() {
                     <td className={`py-3 px-4 text-right ${p.stock_quantity <= 5 ? "text-destructive font-semibold" : ""}`}>{p.stock_quantity}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex gap-1 justify-end">
+                        <Link
+                          to={`/products/${p.id}`}
+                          className="p-1.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
                         <button
                           onClick={() => { setEditProduct(p); setDialogOpen(true); }}
                           className="p-1.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-primary transition-colors"
