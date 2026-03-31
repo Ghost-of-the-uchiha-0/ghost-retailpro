@@ -53,7 +53,7 @@ export default function Sales() {
       });
       if (saleError) throw saleError;
 
-      const { error: stockError } = await supabase.rpc("decrement_stock", {
+      const { error: stockError } = await (supabase.rpc as any)("decrement_stock", {
         p_product_id: selectedProduct.id,
         p_quantity: qty,
       });
