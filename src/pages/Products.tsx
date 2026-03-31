@@ -185,8 +185,8 @@ export default function Products() {
                   <tr key={p.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 font-medium">{p.name}</td>
                     <td className="py-3 px-4 text-muted-foreground capitalize">{p.category.replace("_", " ")}</td>
-                    <td className="py-3 px-4 text-right">${p.purchase_price.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right text-primary">${p.selling_price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right">R{p.purchase_price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-primary">R{p.selling_price.toFixed(2)}</td>
                     <td className={`py-3 px-4 text-right ${p.stock_quantity <= 5 ? "text-destructive font-semibold" : ""}`}>{p.stock_quantity}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex gap-1 justify-end">

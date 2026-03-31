@@ -200,9 +200,9 @@ export default function Sales() {
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{(s.products as any)?.name ?? "—"}</td>
                     <td className="py-3 px-4 text-right">{s.quantity_sold}</td>
-                    <td className="py-3 px-4 text-right">${s.selling_price.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right text-primary">${(s.selling_price * s.quantity_sold).toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right text-primary font-medium">${s.total_profit.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right">R{s.selling_price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-primary">R{(s.selling_price * s.quantity_sold).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-primary font-medium">R{s.total_profit.toFixed(2)}</td>
                   </tr>
                 ))
               )}

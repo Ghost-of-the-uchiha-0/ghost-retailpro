@@ -135,7 +135,7 @@ export default function Expenses() {
                   <tr key={e.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(e.expense_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{e.name}</td>
-                    <td className="py-3 px-4 text-right text-destructive font-medium">${e.amount.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-destructive font-medium">R{e.amount.toFixed(2)}</td>
                   </tr>
                 ))
               )}

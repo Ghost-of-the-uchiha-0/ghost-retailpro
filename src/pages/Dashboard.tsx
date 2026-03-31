@@ -92,7 +92,7 @@ export default function Dashboard() {
                     <td className={`py-2.5 px-3 text-right ${p.stock_quantity <= 5 ? "text-destructive font-semibold" : ""}`}>
                       {p.stock_quantity}
                     </td>
-                    <td className="py-2.5 px-3 text-right text-primary">${p.selling_price.toFixed(2)}</td>
+                    <td className="py-2.5 px-3 text-right text-primary">R{p.selling_price.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
