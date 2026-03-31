@@ -42,7 +42,17 @@ export default function Sales() {
       if (qty <= 0) throw new Error("Quantity must be positive");
       if (qty > selectedProduct.stock_quantity) throw new Error("Insufficient stock");
 
-      const profit = (selectedProduct.selling_price - selectedProduct.purchase_price) * qty;
+      // Get total previously sold for this product to determine initial stock
+      const { data: prevSales, error: prevError } = await supabase
+        .from("sales")
+        .select("quantity_sold")
+        .eq("product_id", selectedProduct.id);
+      if (prevError) throw prevError;
+
+      const totalPrevSold = prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
+      const initialStock = selectedProduct.stock_quantity + totalPrevSold;
+      const perUnitCost = initialStock > 0 ? selectedProduct.purchase_price / initialStock : 0;
+      const profit = (selectedProduct.selling_price - perUnitCost) * qty;
 
       const { error: saleError } = await supabase.from("sales").insert({
         product_id: selectedProduct.id,
@@ -164,10 +174,8 @@ export default function Sales() {
         </form>
         {selectedProduct && quantity && parseInt(quantity) > 0 && (
           <div className="mt-3 text-sm text-muted-foreground">
-            Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each →
-            Profit: <span className="text-primary font-medium">
-              R{((selectedProduct.selling_price - selectedProduct.purchase_price) * parseInt(quantity)).toFixed(2)}
-            </span>
+            Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each
+            (batch cost: R{selectedProduct.purchase_price.toFixed(2)} for entire stock)
           </div>
         )}
       </div>
