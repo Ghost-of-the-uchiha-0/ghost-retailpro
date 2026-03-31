@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type ProductCategory = Database["public"]["Enums"]["product_category"];
@@ -183,13 +184,21 @@ export default function Products() {
               ) : (
                 filtered.map((p, i) => (
                   <tr key={p.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
-                    <td className="py-3 px-4 font-medium">{p.name}</td>
+                    <td className="py-3 px-4 font-medium">
+                      <Link to={`/products/${p.id}`} className="hover:text-primary transition-colors underline-offset-2 hover:underline">{p.name}</Link>
+                    </td>
                     <td className="py-3 px-4 text-muted-foreground capitalize">{p.category.replace("_", " ")}</td>
                     <td className="py-3 px-4 text-right">R{p.purchase_price.toFixed(2)}</td>
                     <td className="py-3 px-4 text-right text-primary">R{p.selling_price.toFixed(2)}</td>
                     <td className={`py-3 px-4 text-right ${p.stock_quantity <= 5 ? "text-destructive font-semibold" : ""}`}>{p.stock_quantity}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex gap-1 justify-end">
+                        <Link
+                          to={`/products/${p.id}`}
+                          className="p-1.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
                         <button
                           onClick={() => { setEditProduct(p); setDialogOpen(true); }}
                           className="p-1.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-primary transition-colors"
