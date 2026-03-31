@@ -109,13 +109,13 @@ export default function Sales() {
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   (s.products as any)?.name ?? "—",
                   s.quantity_sold.toString(),
-                  `$${s.selling_price.toFixed(2)}`,
-                  `$${(s.selling_price * s.quantity_sold).toFixed(2)}`,
-                  `$${s.total_profit.toFixed(2)}`,
+                  `R${s.selling_price.toFixed(2)}`,
+                  `R${(s.selling_price * s.quantity_sold).toFixed(2)}`,
+                  `R${s.total_profit.toFixed(2)}`,
                 ]);
                 exportToPDF("Sales Report", "sales_report", headers, rows, [
-                  `Total Revenue: $${totalRev.toFixed(2)}`,
-                  `Total Profit: $${totalProf.toFixed(2)}`,
+                  `Total Revenue: R${totalRev.toFixed(2)}`,
+                  `Total Profit: R${totalProf.toFixed(2)}`,
                 ]);
               }}
             >
