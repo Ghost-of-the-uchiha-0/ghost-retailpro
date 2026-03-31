@@ -184,7 +184,9 @@ export default function Products() {
               ) : (
                 filtered.map((p, i) => (
                   <tr key={p.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
-                    <td className="py-3 px-4 font-medium">{p.name}</td>
+                    <td className="py-3 px-4 font-medium">
+                      <Link to={`/products/${p.id}`} className="hover:text-primary transition-colors underline-offset-2 hover:underline">{p.name}</Link>
+                    </td>
                     <td className="py-3 px-4 text-muted-foreground capitalize">{p.category.replace("_", " ")}</td>
                     <td className="py-3 px-4 text-right">R{p.purchase_price.toFixed(2)}</td>
                     <td className="py-3 px-4 text-right text-primary">R{p.selling_price.toFixed(2)}</td>
