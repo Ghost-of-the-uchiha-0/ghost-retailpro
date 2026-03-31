@@ -114,7 +114,7 @@ export default function Expenses() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="p-5 border-b border-border flex items-center justify-between">
           <h2 className="font-heading font-semibold">Expense History</h2>
-          <span className="text-primary font-heading font-bold">Total: ${total.toFixed(2)}</span>
+          <span className="text-primary font-heading font-bold">Total: R{total.toFixed(2)}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
