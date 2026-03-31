@@ -75,10 +75,10 @@ export default function Expenses() {
                 const rows = expenses.map((e) => [
                   format(new Date(e.expense_date), "yyyy-MM-dd"),
                   e.name,
-                  `$${e.amount.toFixed(2)}`,
+                  `R${e.amount.toFixed(2)}`,
                 ]);
                 exportToPDF("Expenses Report", "expenses_report", headers, rows, [
-                  `Total Expenses: $${total.toFixed(2)}`,
+                  `Total Expenses: R${total.toFixed(2)}`,
                 ]);
               }}
             >
