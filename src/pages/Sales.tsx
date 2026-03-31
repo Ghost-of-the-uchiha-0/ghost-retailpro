@@ -109,13 +109,13 @@ export default function Sales() {
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   (s.products as any)?.name ?? "—",
                   s.quantity_sold.toString(),
-                  `$${s.selling_price.toFixed(2)}`,
-                  `$${(s.selling_price * s.quantity_sold).toFixed(2)}`,
-                  `$${s.total_profit.toFixed(2)}`,
+                  `R${s.selling_price.toFixed(2)}`,
+                  `R${(s.selling_price * s.quantity_sold).toFixed(2)}`,
+                  `R${s.total_profit.toFixed(2)}`,
                 ]);
                 exportToPDF("Sales Report", "sales_report", headers, rows, [
-                  `Total Revenue: $${totalRev.toFixed(2)}`,
-                  `Total Profit: $${totalProf.toFixed(2)}`,
+                  `Total Revenue: R${totalRev.toFixed(2)}`,
+                  `Total Profit: R${totalProf.toFixed(2)}`,
                 ]);
               }}
             >
@@ -164,9 +164,9 @@ export default function Sales() {
         </form>
         {selectedProduct && quantity && parseInt(quantity) > 0 && (
           <div className="mt-3 text-sm text-muted-foreground">
-            Selling at <span className="text-primary font-medium">${selectedProduct.selling_price.toFixed(2)}</span> each →
+            Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each →
             Profit: <span className="text-primary font-medium">
-              ${((selectedProduct.selling_price - selectedProduct.purchase_price) * parseInt(quantity)).toFixed(2)}
+              R{((selectedProduct.selling_price - selectedProduct.purchase_price) * parseInt(quantity)).toFixed(2)}
             </span>
           </div>
         )}
@@ -200,9 +200,9 @@ export default function Sales() {
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{(s.products as any)?.name ?? "—"}</td>
                     <td className="py-3 px-4 text-right">{s.quantity_sold}</td>
-                    <td className="py-3 px-4 text-right">${s.selling_price.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right text-primary">${(s.selling_price * s.quantity_sold).toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right text-primary font-medium">${s.total_profit.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right">R{s.selling_price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-primary">R{(s.selling_price * s.quantity_sold).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-primary font-medium">R{s.total_profit.toFixed(2)}</td>
                   </tr>
                 ))
               )}

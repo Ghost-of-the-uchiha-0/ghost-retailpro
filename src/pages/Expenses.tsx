@@ -75,10 +75,10 @@ export default function Expenses() {
                 const rows = expenses.map((e) => [
                   format(new Date(e.expense_date), "yyyy-MM-dd"),
                   e.name,
-                  `$${e.amount.toFixed(2)}`,
+                  `R${e.amount.toFixed(2)}`,
                 ]);
                 exportToPDF("Expenses Report", "expenses_report", headers, rows, [
-                  `Total Expenses: $${total.toFixed(2)}`,
+                  `Total Expenses: R${total.toFixed(2)}`,
                 ]);
               }}
             >
@@ -114,7 +114,7 @@ export default function Expenses() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="p-5 border-b border-border flex items-center justify-between">
           <h2 className="font-heading font-semibold">Expense History</h2>
-          <span className="text-primary font-heading font-bold">Total: ${total.toFixed(2)}</span>
+          <span className="text-primary font-heading font-bold">Total: R{total.toFixed(2)}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -135,7 +135,7 @@ export default function Expenses() {
                   <tr key={e.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(e.expense_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{e.name}</td>
-                    <td className="py-3 px-4 text-right text-destructive font-medium">${e.amount.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right text-destructive font-medium">R{e.amount.toFixed(2)}</td>
                   </tr>
                 ))
               )}

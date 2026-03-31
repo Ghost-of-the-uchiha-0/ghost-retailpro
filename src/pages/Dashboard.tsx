@@ -64,9 +64,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={`$${totalRevenue.toFixed(2)}`} icon={DollarSign} accent />
-        <StatCard title="Net Profit" value={`$${netProfit.toFixed(2)}`} icon={TrendingUp} accent />
-        <StatCard title="Total Expenses" value={`$${totalExpenses.toFixed(2)}`} icon={TrendingDown} />
+        <StatCard title="Total Revenue" value={`R${totalRevenue.toFixed(2)}`} icon={DollarSign} accent />
+        <StatCard title="Net Profit" value={`R${netProfit.toFixed(2)}`} icon={TrendingUp} accent />
+        <StatCard title="Total Expenses" value={`R${totalExpenses.toFixed(2)}`} icon={TrendingDown} />
         <StatCard title="Stock Units" value={totalStock.toString()} icon={Package} />
       </div>
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
                     <td className={`py-2.5 px-3 text-right ${p.stock_quantity <= 5 ? "text-destructive font-semibold" : ""}`}>
                       {p.stock_quantity}
                     </td>
-                    <td className="py-2.5 px-3 text-right text-primary">${p.selling_price.toFixed(2)}</td>
+                    <td className="py-2.5 px-3 text-right text-primary">R{p.selling_price.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
