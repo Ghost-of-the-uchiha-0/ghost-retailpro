@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import Sales from "@/pages/Sales";
 import Expenses from "@/pages/Expenses";
+import ProductDetail from "@/pages/ProductDetail";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
