@@ -42,7 +42,17 @@ export default function Sales() {
       if (qty <= 0) throw new Error("Quantity must be positive");
       if (qty > selectedProduct.stock_quantity) throw new Error("Insufficient stock");
 
-      const profit = (selectedProduct.selling_price - selectedProduct.purchase_price) * qty;
+      // Get total previously sold for this product to determine initial stock
+      const { data: prevSales, error: prevError } = await supabase
+        .from("sales")
+        .select("quantity_sold")
+        .eq("product_id", selectedProduct.id);
+      if (prevError) throw prevError;
+
+      const totalPrevSold = prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
+      const initialStock = selectedProduct.stock_quantity + totalPrevSold;
+      const perUnitCost = initialStock > 0 ? selectedProduct.purchase_price / initialStock : 0;
+      const profit = (selectedProduct.selling_price - perUnitCost) * qty;
 
       const { error: saleError } = await supabase.from("sales").insert({
         product_id: selectedProduct.id,
