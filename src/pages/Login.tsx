@@ -61,15 +61,6 @@ export default function Login() {
           <Button type="submit" disabled={loading} className="w-full gold-gradient text-primary-foreground font-semibold hover:opacity-90">
             {loading ? "Signing in..." : "Sign In"}
           </Button>
-
-          <button
-            type="button"
-            onClick={handleSignUp}
-            disabled={loading}
-            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            Don't have an account? Sign up
-          </button>
         </form>
       </div>
     </div>
