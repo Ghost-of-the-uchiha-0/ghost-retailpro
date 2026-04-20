@@ -24,21 +24,6 @@ export default function Login() {
     }
   };
 
-  const handleSignUp = async () => {
-    if (!email || !password) {
-      toast.error("Please enter email and password");
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Account created! Check your email to confirm, or log in directly.");
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-8">
