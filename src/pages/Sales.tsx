@@ -5,15 +5,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Download } from "lucide-react";
+import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+
+type SaleRow = {
+  id: string;
+  product_id: string;
+  quantity_sold: number;
+  selling_price: number;
+  purchase_price: number;
+  total_profit: number;
+  sale_date: string;
+  products: { name: string } | null;
+};
 
 export default function Sales() {
   const qc = useQueryClient();
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
+
+  const [editSale, setEditSale] = useState<SaleRow | null>(null);
+  const [editQty, setEditQty] = useState("");
+  const [deleteSale, setDeleteSale] = useState<SaleRow | null>(null);
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -27,9 +53,12 @@ export default function Sales() {
   const { data: sales, isLoading } = useQuery({
     queryKey: ["sales"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("sales").select("*, products(name)").order("sale_date", { ascending: false });
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*, products(name)")
+        .order("sale_date", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as unknown as SaleRow[];
     },
   });
 
@@ -42,7 +71,6 @@ export default function Sales() {
       if (qty <= 0) throw new Error("Quantity must be positive");
       if (qty > selectedProduct.stock_quantity) throw new Error("Insufficient stock");
 
-      // Get total previously sold for this product to determine initial stock
       const { data: prevSales, error: prevError } = await supabase
         .from("sales")
         .select("quantity_sold")
@@ -79,6 +107,74 @@ export default function Sales() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const editMutation = useMutation({
+    mutationFn: async () => {
+      if (!editSale) throw new Error("No sale selected");
+      const newQty = parseInt(editQty);
+      if (!newQty || newQty <= 0) throw new Error("Quantity must be positive");
+
+      const product = products?.find((p) => p.id === editSale.product_id);
+      if (!product) throw new Error("Product not found");
+
+      const delta = newQty - editSale.quantity_sold; // positive = take more stock
+      if (delta > product.stock_quantity) throw new Error("Insufficient stock for this change");
+
+      // Recompute profit using same batch-cost model
+      const { data: prevSales, error: prevError } = await supabase
+        .from("sales")
+        .select("quantity_sold")
+        .eq("product_id", editSale.product_id);
+      if (prevError) throw prevError;
+      const totalSoldExcludingThis =
+        (prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0) - editSale.quantity_sold;
+      const initialStock = product.stock_quantity + totalSoldExcludingThis + editSale.quantity_sold;
+      const perUnitCost = initialStock > 0 ? editSale.purchase_price / initialStock : 0;
+      const newProfit = (editSale.selling_price - perUnitCost) * newQty;
+
+      const { error: updErr } = await supabase
+        .from("sales")
+        .update({ quantity_sold: newQty, total_profit: newProfit })
+        .eq("id", editSale.id);
+      if (updErr) throw updErr;
+
+      if (delta !== 0) {
+        const { error: stockErr } = await (supabase.rpc as any)("adjust_stock", {
+          p_product_id: editSale.product_id,
+          p_delta: -delta,
+        });
+        if (stockErr) throw stockErr;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Sale updated");
+      setEditSale(null);
+      setEditQty("");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!deleteSale) throw new Error("No sale selected");
+      const { error: delErr } = await supabase.from("sales").delete().eq("id", deleteSale.id);
+      if (delErr) throw delErr;
+      const { error: stockErr } = await (supabase.rpc as any)("adjust_stock", {
+        p_product_id: deleteSale.product_id,
+        p_delta: deleteSale.quantity_sold,
+      });
+      if (stockErr) throw stockErr;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Sale deleted");
+      setDeleteSale(null);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -96,7 +192,7 @@ export default function Sales() {
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
                 const rows = sales.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
-                  (s.products as any)?.name ?? "—",
+                  s.products?.name ?? "—",
                   s.quantity_sold.toString(),
                   s.selling_price.toFixed(2),
                   (s.selling_price * s.quantity_sold).toFixed(2),
@@ -117,7 +213,7 @@ export default function Sales() {
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
                 const rows = sales.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
-                  (s.products as any)?.name ?? "—",
+                  s.products?.name ?? "—",
                   s.quantity_sold.toString(),
                   `R${s.selling_price.toFixed(2)}`,
                   `R${(s.selling_price * s.quantity_sold).toFixed(2)}`,
@@ -195,22 +291,46 @@ export default function Sales() {
                 <th className="text-right py-3 px-4">Price</th>
                 <th className="text-right py-3 px-4">Revenue</th>
                 <th className="text-right py-3 px-4">Profit</th>
+                <th className="text-right py-3 px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">Loading...</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Loading...</td></tr>
               ) : !sales?.length ? (
-                <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">No sales yet</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">No sales yet</td></tr>
               ) : (
                 sales.map((s, i) => (
                   <tr key={s.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
-                    <td className="py-3 px-4 font-medium">{(s.products as any)?.name ?? "—"}</td>
+                    <td className="py-3 px-4 font-medium">{s.products?.name ?? "—"}</td>
                     <td className="py-3 px-4 text-right">{s.quantity_sold}</td>
                     <td className="py-3 px-4 text-right">R{s.selling_price.toFixed(2)}</td>
                     <td className="py-3 px-4 text-right text-primary">R{(s.selling_price * s.quantity_sold).toFixed(2)}</td>
                     <td className="py-3 px-4 text-right text-primary font-medium">R{s.total_profit.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => {
+                            setEditSale(s);
+                            setEditQty(s.quantity_sold.toString());
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteSale(s)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -218,6 +338,65 @@ export default function Sales() {
           </table>
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editSale} onOpenChange={(o) => !o && setEditSale(null)}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Edit Sale</DialogTitle>
+          </DialogHeader>
+          {editSale && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {editSale.products?.name} — original qty: {editSale.quantity_sold}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Quantity Sold</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={editQty}
+                  onChange={(e) => setEditQty(e.target.value)}
+                  className="bg-surface border-border"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditSale(null)}>Cancel</Button>
+            <Button
+              className="gold-gradient text-primary-foreground font-semibold"
+              disabled={editMutation.isPending}
+              onClick={() => editMutation.mutate()}
+            >
+              {editMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deleteSale} onOpenChange={(o) => !o && setDeleteSale(null)}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this sale?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the sale and return {deleteSale?.quantity_sold} unit(s) back to stock.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteMutation.mutate();
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
