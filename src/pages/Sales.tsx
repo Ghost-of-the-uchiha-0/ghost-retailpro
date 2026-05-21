@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { calculateProductSaleProfits, calculateSaleProfit, getBatchSize } from "@/lib/profit";
+import { calculateProductSaleProfits, calculateSaleProfit, calculateSalesWithCorrectProfit, getBatchSize } from "@/lib/profit";
 
 type SaleRow = {
   id: string;
@@ -64,9 +64,10 @@ export default function Sales() {
   });
 
   const selectedProduct = products?.find((p) => p.id === productId);
+  const salesWithCorrectProfit = sales && products ? calculateSalesWithCorrectProfit(products, sales) : [];
 
   const getSalesForProduct = (targetProductId: string, excludeSaleId?: string) =>
-    (sales ?? []).filter((sale) => sale.product_id === targetProductId && sale.id !== excludeSaleId);
+    salesWithCorrectProfit.filter((sale) => sale.product_id === targetProductId && sale.id !== excludeSaleId);
 
   const saleMutation = useMutation({
     mutationFn: async () => {
@@ -208,7 +209,7 @@ export default function Sales() {
           <h1 className="font-heading text-2xl font-bold">Sales</h1>
           <p className="text-muted-foreground text-sm mt-1">Record and view sales</p>
         </div>
-        {sales && sales.length > 0 && (
+        {salesWithCorrectProfit.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -216,7 +217,7 @@ export default function Sales() {
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.products?.name ?? "—",
                   s.quantity_sold.toString(),
@@ -234,10 +235,10 @@ export default function Sales() {
               size="sm"
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
-                const totalRev = sales.reduce((s, r) => s + r.selling_price * r.quantity_sold, 0);
-                const totalProf = sales.reduce((s, r) => s + r.total_profit, 0);
+                const totalRev = salesWithCorrectProfit.reduce((s, r) => s + r.selling_price * r.quantity_sold, 0);
+                const totalProf = salesWithCorrectProfit.reduce((s, r) => s + r.total_profit, 0);
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.products?.name ?? "—",
                   s.quantity_sold.toString(),
@@ -323,10 +324,10 @@ export default function Sales() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Loading...</td></tr>
-              ) : !sales?.length ? (
+              ) : !salesWithCorrectProfit.length ? (
                 <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">No sales yet</td></tr>
               ) : (
-                sales.map((s, i) => (
+                salesWithCorrectProfit.map((s, i) => (
                   <tr key={s.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{s.products?.name ?? "—"}</td>
