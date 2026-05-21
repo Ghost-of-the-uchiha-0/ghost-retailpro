@@ -15,6 +15,10 @@ export function getBatchSize(stockRemaining: number, totalUnitsSold: number) {
   return Math.max(stockRemaining + totalUnitsSold, 0);
 }
 
+function roundCurrency(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export function calculateSaleProfit({
   batchPurchasePrice,
   batchSize,
@@ -27,7 +31,7 @@ export function calculateSaleProfit({
   sellingPrice: number;
 }) {
   const perUnitCost = batchSize > 0 ? batchPurchasePrice / batchSize : 0;
-  return (sellingPrice - perUnitCost) * saleQuantity;
+  return roundCurrency((sellingPrice - perUnitCost) * saleQuantity);
 }
 
 export function calculateProductSaleProfits<T extends ProfitSale>(product: ProfitProduct, sales: T[]) {
