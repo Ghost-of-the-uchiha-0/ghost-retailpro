@@ -50,7 +50,7 @@ export function calculateProductTotalProfit(product: ProfitProduct, sales: Profi
 }
 
 export function calculateSalesWithCorrectProfit<
-  T extends ProfitSale & { id: string; product_id: string },
+  T extends ProfitSale & { id: string; product_id: string; total_profit: number },
   P extends ProfitProduct & { id: string },
 >(products: P[], sales: T[]) {
   const profitBySaleId = new Map<string, number>();
