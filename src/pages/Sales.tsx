@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { calculateProductSaleProfits, calculateSaleProfit, calculateSalesWithCorrectProfit, getBatchSize } from "@/lib/profit";
 
 type SaleRow = {
   id: string;
@@ -63,6 +64,10 @@ export default function Sales() {
   });
 
   const selectedProduct = products?.find((p) => p.id === productId);
+  const salesWithCorrectProfit = sales && products ? calculateSalesWithCorrectProfit(products, sales) : [];
+
+  const getSalesForProduct = (targetProductId: string, excludeSaleId?: string) =>
+    salesWithCorrectProfit.filter((sale) => sale.product_id === targetProductId && sale.id !== excludeSaleId);
 
   const saleMutation = useMutation({
     mutationFn: async () => {
@@ -73,14 +78,18 @@ export default function Sales() {
 
       const { data: prevSales, error: prevError } = await supabase
         .from("sales")
-        .select("quantity_sold")
+        .select("id, quantity_sold, selling_price")
         .eq("product_id", selectedProduct.id);
       if (prevError) throw prevError;
 
       const totalPrevSold = prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
-      const initialStock = selectedProduct.stock_quantity + totalPrevSold;
-      const perUnitCost = initialStock > 0 ? selectedProduct.purchase_price / initialStock : 0;
-      const profit = (selectedProduct.selling_price - perUnitCost) * qty;
+      const batchSize = getBatchSize(selectedProduct.stock_quantity, totalPrevSold);
+      const profit = calculateSaleProfit({
+        batchPurchasePrice: selectedProduct.purchase_price,
+        batchSize,
+        saleQuantity: qty,
+        sellingPrice: selectedProduct.selling_price,
+      });
 
       const { error: saleError } = await supabase.from("sales").insert({
         product_id: selectedProduct.id,
@@ -119,21 +128,31 @@ export default function Sales() {
       const delta = newQty - editSale.quantity_sold; // positive = take more stock
       if (delta > product.stock_quantity) throw new Error("Insufficient stock for this change");
 
-      // Recompute profit using same batch-cost model
-      const { data: prevSales, error: prevError } = await supabase
-        .from("sales")
-        .select("quantity_sold")
-        .eq("product_id", editSale.product_id);
-      if (prevError) throw prevError;
-      const totalSoldExcludingThis =
-        (prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0) - editSale.quantity_sold;
-      const initialStock = product.stock_quantity + totalSoldExcludingThis + editSale.quantity_sold;
-      const perUnitCost = initialStock > 0 ? editSale.purchase_price / initialStock : 0;
-      const newProfit = (editSale.selling_price - perUnitCost) * newQty;
+      const otherSales = getSalesForProduct(editSale.product_id, editSale.id).map((sale) => ({
+        id: sale.id,
+        quantity_sold: sale.quantity_sold,
+        selling_price: sale.selling_price,
+      }));
+      const recalculatedSales = calculateProductSaleProfits(
+        {
+          purchase_price: product.purchase_price,
+          stock_quantity: product.stock_quantity + editSale.quantity_sold,
+        },
+        [
+          ...otherSales,
+          {
+            id: editSale.id,
+            quantity_sold: newQty,
+            selling_price: editSale.selling_price,
+          },
+        ],
+      );
+      const updatedSale = recalculatedSales.find((sale) => sale.id === editSale.id);
+      if (!updatedSale) throw new Error("Could not recalculate sale profit");
 
       const { error: updErr } = await supabase
         .from("sales")
-        .update({ quantity_sold: newQty, total_profit: newProfit })
+        .update({ quantity_sold: newQty, total_profit: updatedSale.total_profit })
         .eq("id", editSale.id);
       if (updErr) throw updErr;
 
@@ -144,6 +163,13 @@ export default function Sales() {
         });
         if (stockErr) throw stockErr;
       }
+
+      const remainingSales = recalculatedSales.filter((sale) => sale.id !== editSale.id);
+      await Promise.all(
+        remainingSales.map((sale) =>
+          supabase.from("sales").update({ total_profit: sale.total_profit }).eq("id", sale.id),
+        ),
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sales"] });
@@ -182,7 +208,7 @@ export default function Sales() {
           <h1 className="font-heading text-2xl font-bold">Sales</h1>
           <p className="text-muted-foreground text-sm mt-1">Record and view sales</p>
         </div>
-        {sales && sales.length > 0 && (
+        {salesWithCorrectProfit.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -190,7 +216,7 @@ export default function Sales() {
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.products?.name ?? "—",
                   s.quantity_sold.toString(),
@@ -208,10 +234,10 @@ export default function Sales() {
               size="sm"
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
-                const totalRev = sales.reduce((s, r) => s + r.selling_price * r.quantity_sold, 0);
-                const totalProf = sales.reduce((s, r) => s + r.total_profit, 0);
+                const totalRev = salesWithCorrectProfit.reduce((s, r) => s + r.selling_price * r.quantity_sold, 0);
+                const totalProf = salesWithCorrectProfit.reduce((s, r) => s + r.total_profit, 0);
                 const headers = ["Date", "Product", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.products?.name ?? "—",
                   s.quantity_sold.toString(),
@@ -297,10 +323,10 @@ export default function Sales() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Loading...</td></tr>
-              ) : !sales?.length ? (
+              ) : !salesWithCorrectProfit.length ? (
                 <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">No sales yet</td></tr>
               ) : (
-                sales.map((s, i) => (
+                salesWithCorrectProfit.map((s, i) => (
                   <tr key={s.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 font-medium">{s.products?.name ?? "—"}</td>

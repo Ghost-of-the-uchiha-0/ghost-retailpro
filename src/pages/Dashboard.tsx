@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Package, TrendingUp, TrendingDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { calculateSalesWithCorrectProfit } from "@/lib/profit";
 
 function StatCard({ title, value, icon: Icon, accent = false }: { title: string; value: string; icon: React.ElementType; accent?: boolean }) {
   return (
@@ -43,15 +44,17 @@ export default function Dashboard() {
     },
   });
 
-  const totalRevenue = sales?.reduce((sum, s) => sum + s.selling_price * s.quantity_sold, 0) ?? 0;
-  const totalProfit = sales?.reduce((sum, s) => sum + s.total_profit, 0) ?? 0;
+  const salesWithCorrectProfit = sales && products ? calculateSalesWithCorrectProfit(products, sales) : [];
+
+  const totalRevenue = salesWithCorrectProfit.reduce((sum, s) => sum + s.selling_price * s.quantity_sold, 0);
+  const totalProfit = salesWithCorrectProfit.reduce((sum, s) => sum + s.total_profit, 0);
   const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0;
   const netProfit = totalProfit - totalExpenses;
   const totalStock = products?.reduce((sum, p) => sum + p.stock_quantity, 0) ?? 0;
 
   // Chart data: sales by product
   const salesByProduct = products?.map((p) => {
-    const productSales = sales?.filter((s) => s.product_id === p.id) ?? [];
+    const productSales = salesWithCorrectProfit.filter((s) => s.product_id === p.id);
     const unitsSold = productSales.reduce((sum, s) => sum + s.quantity_sold, 0);
     return { name: p.name.length > 12 ? p.name.slice(0, 12) + "…" : p.name, sold: unitsSold, revenue: productSales.reduce((sum, s) => sum + s.selling_price * s.quantity_sold, 0) };
   }).filter(d => d.sold > 0) ?? [];
