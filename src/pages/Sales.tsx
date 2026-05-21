@@ -133,7 +133,6 @@ export default function Sales() {
         quantity_sold: sale.quantity_sold,
         selling_price: sale.selling_price,
       }));
-      const batchSize = getBatchSize(product.stock_quantity + editSale.quantity_sold, otherSales.reduce((sum, sale) => sum + sale.quantity_sold, 0));
       const recalculatedSales = calculateProductSaleProfits(
         {
           purchase_price: product.purchase_price,
