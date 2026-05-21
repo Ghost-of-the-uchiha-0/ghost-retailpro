@@ -6,6 +6,7 @@ import { ArrowLeft, TrendingUp, DollarSign, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { calculateProductSaleProfits } from "@/lib/profit";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -36,9 +37,11 @@ export default function ProductDetail() {
 
   const isLoading = prodLoading || salesLoading;
 
-  const totalRevenue = sales?.reduce((sum, s) => sum + s.selling_price * s.quantity_sold, 0) ?? 0;
-  const totalProfit = sales?.reduce((sum, s) => sum + s.total_profit, 0) ?? 0;
-  const totalUnitsSold = sales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
+  const salesWithCorrectProfit = product && sales ? calculateProductSaleProfits(product, sales) : [];
+
+  const totalRevenue = salesWithCorrectProfit.reduce((sum, s) => sum + s.selling_price * s.quantity_sold, 0);
+  const totalProfit = salesWithCorrectProfit.reduce((sum, s) => sum + s.total_profit, 0);
+  const totalUnitsSold = salesWithCorrectProfit.reduce((sum, s) => sum + s.quantity_sold, 0);
 
   if (isLoading) {
     return (
@@ -72,7 +75,7 @@ export default function ProductDetail() {
             <p className="text-muted-foreground text-sm mt-0.5 capitalize">{product.category.replace("_", " ")}</p>
           </div>
         </div>
-        {sales && sales.length > 0 && (
+        {salesWithCorrectProfit.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -80,7 +83,7 @@ export default function ProductDetail() {
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
                 const headers = ["Date", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                 const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.quantity_sold.toString(),
                   s.selling_price.toFixed(2),
@@ -98,7 +101,7 @@ export default function ProductDetail() {
               className="gap-2 border-border text-muted-foreground hover:text-primary"
               onClick={() => {
                 const headers = ["Date", "Qty", "Price", "Revenue", "Profit"];
-                const rows = sales.map((s) => [
+                 const rows = salesWithCorrectProfit.map((s) => [
                   format(new Date(s.sale_date), "yyyy-MM-dd"),
                   s.quantity_sold.toString(),
                   `R${s.selling_price.toFixed(2)}`,
@@ -163,10 +166,10 @@ export default function ProductDetail() {
               </tr>
             </thead>
             <tbody>
-              {!sales?.length ? (
+              {!salesWithCorrectProfit.length ? (
                 <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">No sales recorded for this product</td></tr>
               ) : (
-                sales.map((s, i) => (
+                salesWithCorrectProfit.map((s, i) => (
                   <tr key={s.id} className={`border-b border-border/50 ${i % 2 === 0 ? "bg-surface" : ""}`}>
                     <td className="py-3 px-4 text-muted-foreground">{format(new Date(s.sale_date), "MMM d, yyyy")}</td>
                     <td className="py-3 px-4 text-right">{s.quantity_sold}</td>
@@ -179,7 +182,7 @@ export default function ProductDetail() {
                 ))
               )}
             </tbody>
-            {sales && sales.length > 0 && (
+            {salesWithCorrectProfit.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border font-semibold">
                   <td className="py-3 px-4">Totals</td>
