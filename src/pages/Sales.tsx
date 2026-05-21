@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { calculateProductSaleProfits, calculateSaleProfit, getBatchSize } from "@/lib/profit";
 
 type SaleRow = {
   id: string;
@@ -64,6 +65,9 @@ export default function Sales() {
 
   const selectedProduct = products?.find((p) => p.id === productId);
 
+  const getSalesForProduct = (targetProductId: string, excludeSaleId?: string) =>
+    (sales ?? []).filter((sale) => sale.product_id === targetProductId && sale.id !== excludeSaleId);
+
   const saleMutation = useMutation({
     mutationFn: async () => {
       if (!selectedProduct) throw new Error("Select a product");
@@ -73,14 +77,18 @@ export default function Sales() {
 
       const { data: prevSales, error: prevError } = await supabase
         .from("sales")
-        .select("quantity_sold")
+        .select("id, quantity_sold, selling_price")
         .eq("product_id", selectedProduct.id);
       if (prevError) throw prevError;
 
       const totalPrevSold = prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
-      const initialStock = selectedProduct.stock_quantity + totalPrevSold;
-      const perUnitCost = initialStock > 0 ? selectedProduct.purchase_price / initialStock : 0;
-      const profit = (selectedProduct.selling_price - perUnitCost) * qty;
+      const batchSize = getBatchSize(selectedProduct.stock_quantity, totalPrevSold);
+      const profit = calculateSaleProfit({
+        batchPurchasePrice: selectedProduct.purchase_price,
+        batchSize,
+        saleQuantity: qty,
+        sellingPrice: selectedProduct.selling_price,
+      });
 
       const { error: saleError } = await supabase.from("sales").insert({
         product_id: selectedProduct.id,
@@ -119,21 +127,32 @@ export default function Sales() {
       const delta = newQty - editSale.quantity_sold; // positive = take more stock
       if (delta > product.stock_quantity) throw new Error("Insufficient stock for this change");
 
-      // Recompute profit using same batch-cost model
-      const { data: prevSales, error: prevError } = await supabase
-        .from("sales")
-        .select("quantity_sold")
-        .eq("product_id", editSale.product_id);
-      if (prevError) throw prevError;
-      const totalSoldExcludingThis =
-        (prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0) - editSale.quantity_sold;
-      const initialStock = product.stock_quantity + totalSoldExcludingThis + editSale.quantity_sold;
-      const perUnitCost = initialStock > 0 ? editSale.purchase_price / initialStock : 0;
-      const newProfit = (editSale.selling_price - perUnitCost) * newQty;
+      const otherSales = getSalesForProduct(editSale.product_id, editSale.id).map((sale) => ({
+        id: sale.id,
+        quantity_sold: sale.quantity_sold,
+        selling_price: sale.selling_price,
+      }));
+      const batchSize = getBatchSize(product.stock_quantity + editSale.quantity_sold, otherSales.reduce((sum, sale) => sum + sale.quantity_sold, 0));
+      const recalculatedSales = calculateProductSaleProfits(
+        {
+          purchase_price: product.purchase_price,
+          stock_quantity: product.stock_quantity + editSale.quantity_sold,
+        },
+        [
+          ...otherSales,
+          {
+            id: editSale.id,
+            quantity_sold: newQty,
+            selling_price: editSale.selling_price,
+          },
+        ],
+      );
+      const updatedSale = recalculatedSales.find((sale) => sale.id === editSale.id);
+      if (!updatedSale) throw new Error("Could not recalculate sale profit");
 
       const { error: updErr } = await supabase
         .from("sales")
-        .update({ quantity_sold: newQty, total_profit: newProfit })
+        .update({ quantity_sold: newQty, total_profit: updatedSale.total_profit })
         .eq("id", editSale.id);
       if (updErr) throw updErr;
 
@@ -144,6 +163,13 @@ export default function Sales() {
         });
         if (stockErr) throw stockErr;
       }
+
+      const remainingSales = recalculatedSales.filter((sale) => sale.id !== editSale.id);
+      await Promise.all(
+        remainingSales.map((sale) =>
+          supabase.from("sales").update({ total_profit: sale.total_profit }).eq("id", sale.id),
+        ),
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sales"] });
