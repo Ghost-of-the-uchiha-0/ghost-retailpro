@@ -1,10 +1,12 @@
 type ProfitProduct = {
+  id?: string;
   purchase_price: number;
   stock_quantity: number;
 };
 
 type ProfitSale = {
   id?: string;
+  product_id?: string;
   quantity_sold: number;
   selling_price: number;
 };
@@ -45,4 +47,23 @@ export function calculateProductSaleProfits<T extends ProfitSale>(product: Profi
 
 export function calculateProductTotalProfit(product: ProfitProduct, sales: ProfitSale[]) {
   return calculateProductSaleProfits(product, sales).reduce((sum, sale) => sum + sale.total_profit, 0);
+}
+
+export function calculateSalesWithCorrectProfit<
+  T extends ProfitSale & { id: string; product_id: string },
+  P extends ProfitProduct & { id: string },
+>(products: P[], sales: T[]) {
+  const profitBySaleId = new Map<string, number>();
+
+  products.forEach((product) => {
+    const productSales = sales.filter((sale) => sale.product_id === product.id);
+    calculateProductSaleProfits(product, productSales).forEach((sale) => {
+      profitBySaleId.set(sale.id!, sale.total_profit);
+    });
+  });
+
+  return sales.map((sale) => ({
+    ...sale,
+    total_profit: profitBySaleId.get(sale.id) ?? sale.total_profit,
+  }));
 }
