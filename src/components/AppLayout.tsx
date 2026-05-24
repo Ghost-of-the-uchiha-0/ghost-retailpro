@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingCart, Receipt, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Receipt, LogOut, Menu, X, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,7 @@ const navItems = [
   { label: "Products", path: "/products", icon: Package },
   { label: "Sales", path: "/sales", icon: ShoppingCart },
   { label: "Expenses", path: "/expenses", icon: Receipt },
+  { label: "Reconciliation", path: "/reconciliation", icon: Scale },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

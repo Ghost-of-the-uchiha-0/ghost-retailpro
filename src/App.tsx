@@ -10,6 +10,7 @@ import Products from "@/pages/Products";
 import Sales from "@/pages/Sales";
 import Expenses from "@/pages/Expenses";
 import ProductDetail from "@/pages/ProductDetail";
+import Reconciliation from "@/pages/Reconciliation";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
           <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+          <Route path="/reconciliation" element={<ProtectedRoute><Reconciliation /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
