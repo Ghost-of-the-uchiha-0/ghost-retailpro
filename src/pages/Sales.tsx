@@ -119,31 +119,15 @@ export default function Sales() {
       const delta = newQty - editSale.quantity_sold; // positive = take more stock
       if (delta > product.stock_quantity) throw new Error("Insufficient stock for this change");
 
-      const otherSales = getSalesForProduct(editSale.product_id, editSale.id).map((sale) => ({
-        id: sale.id,
-        quantity_sold: sale.quantity_sold,
-        selling_price: sale.selling_price,
-      }));
-      const recalculatedSales = calculateProductSaleProfits(
-        {
-          purchase_price: product.purchase_price,
-          stock_quantity: product.stock_quantity + editSale.quantity_sold,
-        },
-        [
-          ...otherSales,
-          {
-            id: editSale.id,
-            quantity_sold: newQty,
-            selling_price: editSale.selling_price,
-          },
-        ],
-      );
-      const updatedSale = recalculatedSales.find((sale) => sale.id === editSale.id);
-      if (!updatedSale) throw new Error("Could not recalculate sale profit");
+      const newProfit = calculateSaleProfit({
+        purchasePrice: product.purchase_price,
+        sellingPrice: editSale.selling_price,
+        quantity: newQty,
+      });
 
       const { error: updErr } = await supabase
         .from("sales")
-        .update({ quantity_sold: newQty, total_profit: updatedSale.total_profit })
+        .update({ quantity_sold: newQty, total_profit: newProfit })
         .eq("id", editSale.id);
       if (updErr) throw updErr;
 
@@ -154,13 +138,6 @@ export default function Sales() {
         });
         if (stockErr) throw stockErr;
       }
-
-      const remainingSales = recalculatedSales.filter((sale) => sale.id !== editSale.id);
-      await Promise.all(
-        remainingSales.map((sale) =>
-          supabase.from("sales").update({ total_profit: sale.total_profit }).eq("id", sale.id),
-        ),
-      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sales"] });
