@@ -132,8 +132,10 @@ export default function ProductDetail() {
       {/* Product Info */}
       <div className="bg-card border border-border rounded-xl p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div>
-          <span className="text-muted-foreground">Purchase Price (each)</span>
-          <p className="font-medium mt-1">R{product.purchase_price.toFixed(2)}</p>
+          <span className="text-muted-foreground">Batch Cost / Per Unit</span>
+          <p className="font-medium mt-1">
+            R{product.purchase_price.toFixed(2)} <span className="text-muted-foreground">/</span> R{(product.purchase_price / Math.max(1, (product as any).initial_stock || product.stock_quantity)).toFixed(2)}
+          </p>
         </div>
         <div>
           <span className="text-muted-foreground">Selling Price (each)</span>
