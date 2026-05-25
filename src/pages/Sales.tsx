@@ -76,19 +76,10 @@ export default function Sales() {
       if (qty <= 0) throw new Error("Quantity must be positive");
       if (qty > selectedProduct.stock_quantity) throw new Error("Insufficient stock");
 
-      const { data: prevSales, error: prevError } = await supabase
-        .from("sales")
-        .select("id, quantity_sold, selling_price")
-        .eq("product_id", selectedProduct.id);
-      if (prevError) throw prevError;
-
-      const totalPrevSold = prevSales?.reduce((sum, s) => sum + s.quantity_sold, 0) ?? 0;
-      const batchSize = getBatchSize(selectedProduct.stock_quantity, totalPrevSold);
       const profit = calculateSaleProfit({
-        batchPurchasePrice: selectedProduct.purchase_price,
-        batchSize,
-        saleQuantity: qty,
+        purchasePrice: selectedProduct.purchase_price,
         sellingPrice: selectedProduct.selling_price,
+        quantity: qty,
       });
 
       const { error: saleError } = await supabase.from("sales").insert({
