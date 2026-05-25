@@ -263,7 +263,7 @@ export default function Sales() {
         {selectedProduct && quantity && parseInt(quantity) > 0 && (
           <div className="mt-3 text-sm text-muted-foreground">
             Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each
-            (batch cost: R{selectedProduct.purchase_price.toFixed(2)} for entire stock)
+            (cost: R{selectedProduct.purchase_price.toFixed(2)} per unit)
           </div>
         )}
       </div>
