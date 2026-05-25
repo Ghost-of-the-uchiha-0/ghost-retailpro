@@ -32,12 +32,14 @@ function ProductForm({ product, onClose }: { product?: Product; onClose: () => v
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const stockQty = parseInt(stock);
       const payload = {
         name: name.trim(),
         category,
         purchase_price: parseFloat(purchasePrice),
         selling_price: parseFloat(sellingPrice),
-        stock_quantity: parseInt(stock),
+        stock_quantity: stockQty,
+        initial_stock: stockQty,
       };
       if (product) {
         const { error } = await supabase.from("products").update(payload).eq("id", product.id);
@@ -84,17 +86,22 @@ function ProductForm({ product, onClose }: { product?: Product; onClose: () => v
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label className="text-muted-foreground">Purchase Price</Label>
+          <Label className="text-muted-foreground">Purchase Price (total batch cost)</Label>
           <Input type="number" step="0.01" min="0" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} required className="bg-surface border-border" />
         </div>
         <div className="space-y-2">
-          <Label className="text-muted-foreground">Selling Price</Label>
+          <Label className="text-muted-foreground">Selling Price (each)</Label>
           <Input type="number" step="0.01" min="0" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} required className="bg-surface border-border" />
         </div>
       </div>
       <div className="space-y-2">
-        <Label className="text-muted-foreground">Stock Quantity</Label>
+        <Label className="text-muted-foreground">Stock Quantity (batch size)</Label>
         <Input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} required className="bg-surface border-border" />
+        {purchasePrice && stock && parseInt(stock) > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Per-unit cost: R{(parseFloat(purchasePrice) / parseInt(stock)).toFixed(2)}
+          </p>
+        )}
       </div>
       <Button type="submit" disabled={mutation.isPending} className="w-full gold-gradient text-primary-foreground font-semibold">
         {mutation.isPending ? "Saving..." : product ? "Update Product" : "Add Product"}

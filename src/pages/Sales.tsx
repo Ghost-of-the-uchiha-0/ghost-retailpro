@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { calculateSaleProfit, calculateSalesWithCorrectProfit } from "@/lib/profit";
+import { calculateSaleProfit, calculateSalesWithCorrectProfit, getUnitCost } from "@/lib/profit";
 
 type SaleRow = {
   id: string;
@@ -74,8 +74,9 @@ export default function Sales() {
       if (qty <= 0) throw new Error("Quantity must be positive");
       if (qty > selectedProduct.stock_quantity) throw new Error("Insufficient stock");
 
+      const unitCost = getUnitCost(selectedProduct as any);
       const profit = calculateSaleProfit({
-        purchasePrice: selectedProduct.purchase_price,
+        unitCost,
         sellingPrice: selectedProduct.selling_price,
         quantity: qty,
       });
@@ -84,7 +85,7 @@ export default function Sales() {
         product_id: selectedProduct.id,
         quantity_sold: qty,
         selling_price: selectedProduct.selling_price,
-        purchase_price: selectedProduct.purchase_price,
+        purchase_price: Math.round(unitCost * 10000) / 10000,
         total_profit: profit,
       });
       if (saleError) throw saleError;
@@ -117,8 +118,9 @@ export default function Sales() {
       const delta = newQty - editSale.quantity_sold; // positive = take more stock
       if (delta > product.stock_quantity) throw new Error("Insufficient stock for this change");
 
+      const unitCost = getUnitCost(product as any);
       const newProfit = calculateSaleProfit({
-        purchasePrice: product.purchase_price,
+        unitCost,
         sellingPrice: editSale.selling_price,
         quantity: newQty,
       });
@@ -263,7 +265,7 @@ export default function Sales() {
         {selectedProduct && quantity && parseInt(quantity) > 0 && (
           <div className="mt-3 text-sm text-muted-foreground">
             Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each
-            (cost: R{selectedProduct.purchase_price.toFixed(2)} per unit)
+            (batch cost R{selectedProduct.purchase_price.toFixed(2)} ÷ {(selectedProduct as any).initial_stock || selectedProduct.stock_quantity} units = R{getUnitCost(selectedProduct as any).toFixed(2)} per unit)
           </div>
         )}
       </div>

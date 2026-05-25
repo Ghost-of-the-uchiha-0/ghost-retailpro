@@ -43,6 +43,7 @@ export type Database = {
           category: Database["public"]["Enums"]["product_category"]
           created_at: string
           id: string
+          initial_stock: number
           name: string
           purchase_price: number
           selling_price: number
@@ -53,6 +54,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["product_category"]
           created_at?: string
           id?: string
+          initial_stock?: number
           name: string
           purchase_price: number
           selling_price: number
@@ -63,6 +65,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["product_category"]
           created_at?: string
           id?: string
+          initial_stock?: number
           name?: string
           purchase_price?: number
           selling_price?: number
