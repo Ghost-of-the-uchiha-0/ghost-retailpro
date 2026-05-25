@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Download, Pencil, Trash2 } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { calculateProductSaleProfits, calculateSaleProfit, calculateSalesWithCorrectProfit } from "@/lib/profit";
+import { calculateSaleProfit, calculateSalesWithCorrectProfit } from "@/lib/profit";
 
 type SaleRow = {
   id: string;
