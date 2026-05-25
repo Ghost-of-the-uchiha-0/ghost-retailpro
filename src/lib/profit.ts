@@ -1,7 +1,7 @@
 type ProfitProduct = {
   id?: string;
   purchase_price: number;
-  stock_quantity: number;
+  stock_quantity?: number;
 };
 
 type ProfitSale = {
@@ -9,42 +9,36 @@ type ProfitSale = {
   product_id?: string;
   quantity_sold: number;
   selling_price: number;
+  purchase_price?: number;
 };
-
-export function getBatchSize(stockRemaining: number, totalUnitsSold: number) {
-  return Math.max(stockRemaining + totalUnitsSold, 0);
-}
 
 function roundCurrency(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+/**
+ * Profit = (selling_price - purchase_price) * quantity.
+ * purchase_price is the per-unit cost of the product.
+ */
 export function calculateSaleProfit({
-  batchPurchasePrice,
-  batchSize,
-  saleQuantity,
+  purchasePrice,
   sellingPrice,
+  quantity,
 }: {
-  batchPurchasePrice: number;
-  batchSize: number;
-  saleQuantity: number;
+  purchasePrice: number;
   sellingPrice: number;
+  quantity: number;
 }) {
-  const perUnitCost = batchSize > 0 ? batchPurchasePrice / batchSize : 0;
-  return roundCurrency((sellingPrice - perUnitCost) * saleQuantity);
+  return roundCurrency((sellingPrice - purchasePrice) * quantity);
 }
 
 export function calculateProductSaleProfits<T extends ProfitSale>(product: ProfitProduct, sales: T[]) {
-  const totalUnitsSold = sales.reduce((sum, sale) => sum + sale.quantity_sold, 0);
-  const batchSize = getBatchSize(product.stock_quantity, totalUnitsSold);
-
   return sales.map((sale) => ({
     ...sale,
     total_profit: calculateSaleProfit({
-      batchPurchasePrice: product.purchase_price,
-      batchSize,
-      saleQuantity: sale.quantity_sold,
+      purchasePrice: product.purchase_price,
       sellingPrice: sale.selling_price,
+      quantity: sale.quantity_sold,
     }),
   }));
 }
@@ -54,20 +48,20 @@ export function calculateProductTotalProfit(product: ProfitProduct, sales: Profi
 }
 
 export function calculateSalesWithCorrectProfit<
-  T extends ProfitSale & { id: string; product_id: string; total_profit: number },
+  T extends ProfitSale & { id: string; product_id: string; total_profit: number; purchase_price: number },
   P extends ProfitProduct & { id: string },
 >(products: P[], sales: T[]) {
-  const profitBySaleId = new Map<string, number>();
-
-  products.forEach((product) => {
-    const productSales = sales.filter((sale) => sale.product_id === product.id);
-    calculateProductSaleProfits(product, productSales).forEach((sale) => {
-      profitBySaleId.set(sale.id!, sale.total_profit);
-    });
+  const productById = new Map(products.map((p) => [p.id, p]));
+  return sales.map((sale) => {
+    const product = productById.get(sale.product_id);
+    const purchasePrice = product?.purchase_price ?? sale.purchase_price;
+    return {
+      ...sale,
+      total_profit: calculateSaleProfit({
+        purchasePrice,
+        sellingPrice: sale.selling_price,
+        quantity: sale.quantity_sold,
+      }),
+    };
   });
-
-  return sales.map((sale) => ({
-    ...sale,
-    total_profit: profitBySaleId.get(sale.id) ?? sale.total_profit,
-  }));
 }
