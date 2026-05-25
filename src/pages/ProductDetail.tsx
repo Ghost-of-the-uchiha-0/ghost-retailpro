@@ -132,7 +132,7 @@ export default function ProductDetail() {
       {/* Product Info */}
       <div className="bg-card border border-border rounded-xl p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div>
-          <span className="text-muted-foreground">Purchase Price (batch)</span>
+          <span className="text-muted-foreground">Purchase Price (each)</span>
           <p className="font-medium mt-1">R{product.purchase_price.toFixed(2)}</p>
         </div>
         <div>
