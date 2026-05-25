@@ -66,8 +66,6 @@ export default function Sales() {
   const selectedProduct = products?.find((p) => p.id === productId);
   const salesWithCorrectProfit = sales && products ? calculateSalesWithCorrectProfit(products, sales) : [];
 
-  const getSalesForProduct = (targetProductId: string, excludeSaleId?: string) =>
-    salesWithCorrectProfit.filter((sale) => sale.product_id === targetProductId && sale.id !== excludeSaleId);
 
   const saleMutation = useMutation({
     mutationFn: async () => {
