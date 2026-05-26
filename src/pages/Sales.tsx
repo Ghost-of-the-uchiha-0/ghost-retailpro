@@ -265,7 +265,7 @@ export default function Sales() {
         {selectedProduct && quantity && parseInt(quantity) > 0 && (
           <div className="mt-3 text-sm text-muted-foreground">
             Selling at <span className="text-primary font-medium">R{selectedProduct.selling_price.toFixed(2)}</span> each
-            (batch cost R{selectedProduct.purchase_price.toFixed(2)} ÷ {(selectedProduct as any).initial_stock || selectedProduct.stock_quantity} units = R{getUnitCost(selectedProduct as any).toFixed(2)} per unit)
+            (batch cost R{selectedProduct.purchase_price.toFixed(2)} ÷ {(selectedProduct as any).initial_stock} units = R{getUnitCost(selectedProduct as any).toFixed(2)} per unit)
           </div>
         )}
       </div>

@@ -39,13 +39,15 @@ function ProductForm({ product, onClose }: { product?: Product; onClose: () => v
         purchase_price: parseFloat(purchasePrice),
         selling_price: parseFloat(sellingPrice),
         stock_quantity: stockQty,
-        initial_stock: stockQty,
       };
       if (product) {
         const { error } = await supabase.from("products").update(payload).eq("id", product.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("products").insert(payload);
+        const { error } = await supabase.from("products").insert({
+          ...payload,
+          initial_stock: stockQty,
+        });
         if (error) throw error;
       }
     },
