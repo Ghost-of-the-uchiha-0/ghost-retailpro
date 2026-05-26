@@ -134,7 +134,7 @@ export default function ProductDetail() {
         <div>
           <span className="text-muted-foreground">Batch Cost / Per Unit</span>
           <p className="font-medium mt-1">
-            R{product.purchase_price.toFixed(2)} <span className="text-muted-foreground">/</span> R{(product.purchase_price / Math.max(1, (product as any).initial_stock || product.stock_quantity)).toFixed(2)}
+            R{product.purchase_price.toFixed(2)} <span className="text-muted-foreground">/</span> R{(product.purchase_price / Math.max(1, (product as any).initial_stock)).toFixed(2)}
           </p>
         </div>
         <div>
