@@ -1,207 +1,121 @@
 # Gold Ledger
 
-AI Developer Prompt: Build a Dark-Themed Financial Web App for a Retail Business
+**A retail business management application for tracking inventory, sales, expenses, revenue, and profit.**
 
-Project Overview:
-Create a full-stack web application for managing sales, stock, and expenses for a small retail business. Initially handle ice creams and perfumes/colognes, with placeholders for future products (shoes, headsets, etc.). Use a dark theme (black & gold) for UI/UX.
+Gold Ledger was created to help small retail businesses manage their daily financial and stock operations in one place. Originally designed around an ice cream business, the application can also be used to manage products such as perfumes, colognes, and other retail items.
 
-Functional Requirements
+**Live Application:** https://ghost-retailpro.lovable.app
 
-Authentication
+## Overview
 
- Admin login only (email + password).
+Managing a small retail business involves keeping track of stock purchases, product prices, sales, and expenses. Gold Ledger brings these operations together to make it easier to monitor business performance and understand profitability.
 
- Optional: future multi-user support (roles: Admin, Cashier).
+The application uses a dark black-and-gold interface designed to provide a clean and practical experience.
 
-Product Management
+## Core Features
 
- Add/edit/delete products.
+### Product and Inventory Management
+- Manage products and their categories.
+- Record purchase prices and selling prices.
+- Track available stock quantities.
+- Support different product types, with room to expand into categories such as shoes and electronics.
 
- Fields: Product Name, Category, Purchase Price, Selling Price, Quantity in Stock, Date Added.
+### Sales Management
+- Record sales against available products.
+- Track quantities sold and selling prices.
+- Update stock quantities when sales are recorded.
+- Calculate revenue and profit from sales.
 
- Include empty slots for future categories like shoes, electronics, etc.
+### Expense Tracking
+- Record business expenses.
+- Track expense amounts and dates.
+- Include expenses in overall business financial calculations.
 
-Stock & Expense Tracking
+### Financial Dashboard
+- Monitor total revenue.
+- Track business expenses.
+- View calculated profit.
+- Monitor stock levels and units sold.
 
- Add stock purchases: product, quantity, purchase price, date.
+## Design
 
- Add expenses: expense name, amount, date.
+Gold Ledger uses a dark-themed interface with a black-and-gold colour palette.
 
- Validation: quantity and prices must be ≥ 0.
+| Element | Colour |
+|---|---|
+| Background | `#000000` |
+| Accent and buttons | `#FFD700` |
+| Text | `#FFFFFF` |
+| Hover states | `#E6C200` |
+| Table backgrounds | `#121212` |
 
-Sales Management
+The interface is designed to be responsive across desktop and mobile screens.
 
- Add sales: product, quantity sold, auto-filled selling price, date.
+## Future Improvements
 
- Automatically update stock (subtract sold units).
+Potential features for future development include:
 
- Calculate profit per sale: (Selling Price − Purchase Price) * Quantity Sold.
+- Sales reports with daily, weekly, and monthly trends.
+- Exporting financial reports to CSV or PDF.
+- Low-stock notifications.
+- Dynamic product category creation.
+- Multi-currency support.
+- Additional user roles, such as Admin and Cashier.
 
- Update total revenue, expenses, net profit dynamically.
+## Built With
 
-Dashboard
+- [Lovable](https://lovable.dev/) — AI-assisted application development.
+- GitHub — Source code management and version control.
 
- Display:
+The application is developed through Lovable, with changes synchronised to its connected GitHub repository.
 
- Current stock per product
+## Run Locally
 
- Total revenue, total expenses, net profit
+To work on the project locally, you need Node.js and npm installed.
 
- Total units sold per product
+**1. Clone the repository**
 
- Graphs/charts for sales trends (daily, weekly, monthly)
+```bash
+git clone https://github.com/Ghost-of-the-uchiha-0/ghost-retailpro.git
+```
 
- Use Chart.js or Recharts with black background, gold accents.
+**2. Open the project directory**
 
-Technical Requirements
+```bash
+cd ghost-retailpro
+```
 
-Front-End
+**3. Install dependencies**
 
-Framework: React.js or Vue.js
+```bash
+npm install
+```
 
-UI/UX Theme: Dark Mode
+**4. Start the development server**
 
- Background: Black (#000000)
-
- Accent & Buttons: Gold (#FFD700)
-
- Text: White (#FFFFFF) for readability
-
- Hover/active states: slightly darker gold (#E6C200)
-
-Components:
-
- Product management table (sortable, searchable)
-
- Sales form (dropdown for products, quantity input)
-
- Expense form
-
- Dashboard with charts
-
- Login form
-
-Validation: Client-side validation for stock, prices, sales, expenses.
-
-Back-End
-
-Framework: Node.js + Express.js
-
-API Endpoints:
-
-/api/products → GET, POST, PUT, DELETE
-
-/api/sales → GET, POST
-
-/api/expenses → GET, POST
-
-/api/reports → GET
-
-Business Logic:
-
- On sale, subtract stock automatically
-
- Calculate profit per sale
-
- Track cumulative totals for revenue, expenses, profit
-
- Prevent negative stock values
-
-Database
-
-Type: Relational (PostgreSQL/MySQL) or NoSQL (MongoDB)
-
-Schema Example:
-
-Table: products
-- id (PK)
-- name
-- category
-- purchase_price
-- selling_price
-- stock_quantity
-- created_at
-- updated_at
-
-Table: sales
-- id (PK)
-- product_id (FK)
-- quantity_sold
-- selling_price
-- total_profit
-- sale_date
-
-Table: expenses
-- id (PK)
-- name
-- amount
-- expense_date
-
-UX & UI Details
-
- Dark UI theme: black background, gold buttons, white text.
-
- Responsive design for desktop and mobile.
-
- Hover effects: gold hover on buttons and links.
-
- Data tables: striped rows with dark grey (#121212) alternating.
-
- Chart colors: gold for lines/bars, subtle white gridlines.
-
-Optional Features / Future Scalability
-
- Export reports to CSV or PDF
-
- Low stock alerts (notification system)
-
- Multi-currency support
-
- Multi-user role support
-
- Future product categories (shoes, electronics, etc.) with dynamic category creation.
-
-Edge Cases / Validations
-
- Stock cannot be negative.
-
- Selling price cannot be lower than 0.
-
- Purchase price cannot be negative.
-
- Handle rounding for currency.
-
- Editing historical data updates all dependent calculations.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://ghost-retailpro.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7de53114-daac-45f0-b381-9b7f35a5326a).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```bash
 npm run dev
 ```
 
-## Repository security review
+## Repository Security
 
-Before sharing this repository publicly, run:
+Before making the repository public, review the tracked files and Git history for accidentally committed environment files or private credentials.
 
-```sh
+If the repository includes the security-check script, run:
+
+```bash
 npm run security:repo
 ```
 
-The check reviews tracked files and Git history available in the local clone for `.env`-style files and likely private credentials. It prints file names, line numbers, and finding types, but never prints matched credential values. A non-zero result means there are items to review; it does not prove a secret is present. This heuristic check can miss credentials, and history only includes commits available in the clone, so review the GitHub repository and its full history before changing visibility. Browser-facing publishable keys may be visible by design; private service keys, passwords, and tokens must not be.
+Review any reported findings before changing repository visibility. Never expose private service keys, passwords, or access tokens.
+
+## Continue Development
+
+This project can be continued in the [Lovable editor](https://lovable.dev/projects/7de53114-daac-45f0-b381-9b7f35a5326a).
+
+---
+
+**Project:** Gold Ledger  
+**Developer:** Aubrey Nkuna  
+**Development Approach:** AI-assisted development with Lovable  
+**Live Demo:** https://ghost-retailpro.lovable.app
