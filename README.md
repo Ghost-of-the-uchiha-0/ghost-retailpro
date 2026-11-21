@@ -195,3 +195,13 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Repository security review
+
+Before sharing this repository publicly, run:
+
+```sh
+npm run security:repo
+```
+
+The check reviews tracked files and Git history available in the local clone for `.env`-style files and likely private credentials. It prints file names, line numbers, and finding types, but never prints matched credential values. A non-zero result means there are items to review; it does not prove a secret is present. This heuristic check can miss credentials, and history only includes commits available in the clone, so review the GitHub repository and its full history before changing visibility. Browser-facing publishable keys may be visible by design; private service keys, passwords, and tokens must not be.
